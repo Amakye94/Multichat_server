@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MultiChat Server</title>
+</head>
+<body>
+    <h1>MultiChat Server</h1>
+
+    <!-- Registration Form -->
+    <h2>Register</h2>
+    <form id="registerForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <label for="role">Role:</label>
+        <input type="text" id="role" name="role" required><br>
+        <button type="submit">Register</button>
+    </form>
+
+    <h2>Login</h2>
+    <!-- Login Form -->
+    <form id="loginForm">
+        <label for="loginUsername">Username:</label>
+        <input type="text" id="loginUsername" name="loginUsername" required><br>
+        <label for="loginPassword">Password:</label>
+        <input type="password" id="loginPassword" name="loginPassword" required><br>
+        <button type="submit">Login</button>
+    </form>
+
+    <h2>Send Message</h2>
+    <!-- Send Message Form -->
+    <form id="messageForm">
+        <label for="senderId">Sender ID:</label>
+        <input type="text" id="senderId" name="senderId" required><br>
+        <label for="receiverId">Receiver ID:</label>
+        <input type="text" id="receiverId" name="receiverId" required><br>
+        <label for="content">Message:</label>
+        <input type="text" id="content" name="content" required><br>
+        <button type="submit">Send Message</button>
+    </form>
+
+    <h2>Get Messages</h2>
+    <!-- Get Messages Form -->
+    <form id="getMessagesForm">
+        <label for="userId">User ID:</label>
+        <input type="text" id="userId" name="userId" required><br>
+        <button type="submit">Get Messages</button>
+    </form>
+
+    <div id="messages"></div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+
+            const response = await fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password, role })
+            });
+            const result = await response.json();
+            alert(result.message);
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const response = await fetch('/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+            const result = await response.json();
+            localStorage.setItem('token', result.access_token);
+            alert('Logged in successfully');
+        });
+
+        document.getElementById('messageForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const senderId = document.getElementById('senderId').value;
+            const receiverId = document.getElementById('receiverId').value;
+            const content = document.getElementById('content').value;
+            const token = localStorage.getItem('token');
+
+            const response = await fetch('/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({ sender_id: senderId, receiver_id: receiverId, content })
+            });
+            const result = await response.json();
+            alert(result.message);
+        });
+
+        document.getElementById('getMessagesForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const token = localStorage.getItem('token');
+
+            const response = await fetch(`/messages/${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+            const result = await response.json();
+            document.getElementById('messages').innerHTML = JSON.stringify(result.messages, null, 2);
+        });
+    </script>
+</body>
+</html>
